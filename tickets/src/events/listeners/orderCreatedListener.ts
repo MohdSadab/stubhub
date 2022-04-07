@@ -1,0 +1,40 @@
+
+import { Listener, Subjects, OrderCreatedEvent } from "@sadabkhan/common";
+import { Message } from "node-nats-streaming";
+import { TicketModel as Ticket } from "../../models/ticketModel";
+import { TicketUpdatedPublisher } from "../publishers/ticketUpdatedPublisher";
+import { queueName } from "./queueType";
+
+export class OrderCreatedListener extends Listener<OrderCreatedEvent>{
+
+    subject: Subjects.ORDER_CREATED = Subjects.ORDER_CREATED
+
+    queueGroupName = queueName
+
+    async onMessage(data: OrderCreatedEvent['data'], msg: Message) {
+       // Find the ticket that the order is reserving
+    const ticket = await Ticket.findById(data.ticket.id);
+    // If no ticket, throw error
+    if (!ticket) {
+      throw new Error('Ticket not found');
+    }
+    
+    // Mark the ticket as being reserved by setting its orderId property
+    ticket.set({ orderId: data.id });
+
+    // Save the ticket
+    await ticket.save();
+    await new TicketUpdatedPublisher(this._client).publish({
+      id: ticket.id,
+      price: ticket.price,
+      title: ticket.title,
+      userId: ticket.userId,
+      orderId: ticket.orderId,
+      version: ticket.version,
+    });
+
+    // ack the message
+    msg.ack();
+    }
+
+}

@@ -1,0 +1,54 @@
+apiVersion: skaffold/v2beta10
+kind: Config
+deploy:
+  kubectl:
+    manifests:
+      - ./infra/k8s/*
+build:
+  local:
+    push: false
+  artifacts:
+    - image: sadabkhan/auth
+      context: auth
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'   #changes of files inside src folder copies directly into pods 
+            dest: /app
+
+    - image: sadabkhan/ticket
+      context: tickets
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'   #changes of files inside src folder copies directly into pods 
+            dest: /app
+
+    - image: sadabkhan/order
+      context: orders
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'   #changes of files inside src folder copies directly into pods 
+            dest: /app
+    
+    - image: sadabkhan/expiration
+      context: expiration
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'   #changes of files inside src folder copies directly into pods 
+            dest: /app
+
+    - image: sadabkhan/payment
+      context: payment
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: 'src/**/*.ts'   #changes of files inside src folder copies directly into pods 
+            dest: /app
